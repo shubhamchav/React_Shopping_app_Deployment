@@ -20,6 +20,9 @@ jobs:
           node-version: 20
           cache: 'pnpm'
 
+      - name: Install pnpm
+        run: npm install -g pnpm  # Ensure pnpm is installed
+
       - name: Install Dependencies
         run: pnpm install
 
@@ -39,7 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: Development
-      url: 'http://localhost:5173/'
+      url: 'https://shubhamchav.github.io/Deployon_Staging_Production/'  # Updated GitHub Pages URL
     steps:
       - name: Download Build Artifact
         uses: actions/download-artifact@v4
@@ -77,6 +80,7 @@ jobs:
 
       - name: Deploy to Staging Server
         run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST_STAGING }} "rm -rf /usr/share/nginx/html/*"
           scp -o StrictHostKeyChecking=no -r dist/* ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST_STAGING }}:/usr/share/nginx/html/
           ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST_STAGING }} "sudo systemctl restart nginx"
 
@@ -103,5 +107,6 @@ jobs:
 
       - name: Deploy to Production Server
         run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST_PROD }} "rm -rf /usr/share/nginx/html/*"
           scp -o StrictHostKeyChecking=no -r dist/* ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST_PROD }}:/usr/share/nginx/html/
           ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST_PROD }} "sudo systemctl restart nginx"
