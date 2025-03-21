@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: Staging
-      url: 'http://${{ secrets.EC2_HOST_STAGING }}/'
+      url: 'http://34.238.85.21:5173/'
 
     steps:
       - name: Download Build Artifact
@@ -70,7 +70,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: Production
-      url: 'http://${{ secrets.EC2_HOST_PROD }}/'
+      url: 'http://localhost:5173/'
 
     steps:
       - name: Download Build Artifact
