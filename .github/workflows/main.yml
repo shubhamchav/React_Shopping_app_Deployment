@@ -1,0 +1,107 @@
+name: CI + CD
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  Build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'pnpm'
+
+      - name: Install Dependencies
+        run: pnpm install
+
+      - name: Build Project
+        run: pnpm run build  # Generates `dist/` folder
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-dist
+          path: dist  # Upload the `dist` folder for later use
+
+  DeployDev:
+    name: Deploy to GitHub Pages (Dev)
+    if: github.event_name == 'pull_request'
+    needs: [Build]
+    runs-on: ubuntu-latest
+    environment:
+      name: Development
+      url: 'http://localhost:5173/'
+    steps:
+      - name: Download Build Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build-dist
+          path: dist
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist  # Deploy the `dist` folder
+
+  DeployStaging:
+    name: Deploy to Staging (EC2)
+    if: github.event.ref == 'refs/heads/master'
+    needs: [Build]
+    runs-on: ubuntu-latest
+    environment:
+      name: Staging
+      url: 'http://34.238.85.21/'
+
+    steps:
+      - name: Download Build Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build-dist
+          path: dist
+
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+      - name: Deploy to Staging Server
+        run: |
+          scp -o StrictHostKeyChecking=no -r dist/* ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST_STAGING }}:/usr/share/nginx/html/
+          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST_STAGING }} "sudo systemctl restart nginx"
+
+  DeployProd:
+    name: Deploy to Production (EC2)
+    needs: [DeployStaging]
+    runs-on: ubuntu-latest
+    environment:
+      name: Production
+      url: 'http://<PRODUCTION_EC2_PUBLIC_IP>/'
+
+    steps:
+      - name: Download Build Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build-dist
+          path: dist
+
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+      - name: Deploy to Production Server
+        run: |
+          scp -o StrictHostKeyChecking=no -r dist/* ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST_PROD }}:/usr/share/nginx/html/
+          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST_PROD }} "sudo systemctl restart nginx"
