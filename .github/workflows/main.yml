@@ -35,6 +35,21 @@ jobs:
           name: build-dist
           path: dist  # Upload the `dist` folder for later use
 
+  DeployDev:
+    name: Deploy to GitHub Pages (Dev)
+    if: github.event_name == 'pull_request'  # Deploy only for pull requests
+    needs: [Build]
+    runs-on: ubuntu-latest
+    environment:
+      name: Development
+      url: 'http://localhost:5173/'  # GitHub Pages URL
+    steps:
+      - name: Download Build Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build-dist
+          path: dist  
+          
   DeployStaging:
     name: Deploy to Staging (EC2)
     if: github.event.ref == 'refs/heads/master'
