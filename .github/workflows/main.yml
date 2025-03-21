@@ -13,7 +13,7 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-        
+
       - name: Install pnpm
         run: npm install -g pnpm  # Ensure pnpm is installed
 
@@ -35,27 +35,6 @@ jobs:
           name: build-dist
           path: dist  # Upload the `dist` folder for later use
 
-  DeployDev:
-    name: Deploy to GitHub Pages (Dev)
-    if: github.event_name == 'pull_request'
-    needs: [Build]
-    runs-on: ubuntu-latest
-    environment:
-      name: Development
-      url: 'https://shubhamchav.github.io/Deployon_Staging_Production/'  # Updated GitHub Pages URL
-    steps:
-      - name: Download Build Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: build-dist
-          path: dist
-
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist  # Deploy the `dist` folder
-
   DeployStaging:
     name: Deploy to Staging (EC2)
     if: github.event.ref == 'refs/heads/master'
@@ -63,7 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: Staging
-      url: 'http://34.238.85.21/'
+      url: 'http://${{ secrets.EC2_HOST_STAGING }}/'
 
     steps:
       - name: Download Build Artifact
@@ -77,12 +56,13 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.EC2_HOST_STAGING }} >> ~/.ssh/known_hosts
 
       - name: Deploy to Staging Server
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST_STAGING }} "rm -rf /usr/share/nginx/html/*"
-          scp -o StrictHostKeyChecking=no -r dist/* ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST_STAGING }}:/usr/share/nginx/html/
-          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST_STAGING }} "sudo systemctl restart nginx"
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST_STAGING }} "rm -rf /var/www/staging/*"
+          scp -r dist/* ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST_STAGING }}:/var/www/staging/
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST_STAGING }} "sudo systemctl restart nginx"
 
   DeployProd:
     name: Deploy to Production (EC2)
@@ -90,7 +70,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: Production
-      url: 'http://<PRODUCTION_EC2_PUBLIC_IP>/'
+      url: 'http://${{ secrets.EC2_HOST_PROD }}/'
 
     steps:
       - name: Download Build Artifact
@@ -104,9 +84,10 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.EC2_HOST_PROD }} >> ~/.ssh/known_hosts
 
       - name: Deploy to Production Server
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST_PROD }} "rm -rf /usr/share/nginx/html/*"
-          scp -o StrictHostKeyChecking=no -r dist/* ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST_PROD }}:/usr/share/nginx/html/
-          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST_PROD }} "sudo systemctl restart nginx"
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST_PROD }} "rm -rf /var/www/production/*"
+          scp -r dist/* ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST_PROD }}:/var/www/production/
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST_PROD }} "sudo systemctl restart nginx"
