@@ -63,7 +63,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: Staging
-      url: 'http://34.238.85.21/'
+      url: 'http://18.212.41.91 '
 
     steps:
       - name: Download Build Artifact
