@@ -91,7 +91,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: Production
-      url: 'http://<PRODUCTION_EC2_PUBLIC_IP>/'
+      url: 'http://18.206.254.12 /'
 
     steps:
       - name: Download Build Artifact
