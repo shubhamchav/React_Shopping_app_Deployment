@@ -37,7 +37,7 @@ jobs:
 
   DeployDev:
     name: Deploy to Dev (Dev)
-    if: github.event_name == 'pull_request'  # Deploy only for pull requests
+    if: github.event_name == 'pull_request' 
     needs: [Build]
     runs-on: ubuntu-latest
     environment:
