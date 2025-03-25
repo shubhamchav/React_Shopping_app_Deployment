@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: Development
-      url: 'https://shubhamchav.github.io/Deployon_Staging_Production/'  # GitHub Pages URL
+      url: 'http://localhost:5173/'  
     steps:
       - name: Download Build Artifact
         uses: actions/download-artifact@v4
@@ -50,11 +50,6 @@ jobs:
           name: build-dist
           path: dist  
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist  # Deploy the `dist` folder
 
   DeployStaging:
     name: Deploy to Staging (EC2)
