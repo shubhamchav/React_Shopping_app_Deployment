@@ -58,7 +58,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: Staging
-      url: 'http://18.212.41.91 '
+      url: 'http://54.85.96.235/ '
 
     steps:
       - name: Download Build Artifact
@@ -91,7 +91,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: Production
-      url: 'http://18.206.254.12 /'
+      url: 'http://3.84.124.96 /'
 
     steps:
       - name: Download Build Artifact
