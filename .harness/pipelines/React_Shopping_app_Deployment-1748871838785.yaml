@@ -1,0 +1,49 @@
+pipeline:
+  identifier: Build_shubhamchav_React_Shopping_app_Deployment_1748871840215
+  name: Build React_Shopping_app_Deployment
+  orgIdentifier: default
+  projectIdentifier: demo
+  properties:
+    ci:
+      codebase:
+        build: <+input>
+        connectorRef: account.Github
+        repoName: shubhamchav/React_Shopping_app_Deployment
+  stages:
+    - stage:
+        identifier: build1
+        name: build
+        spec:
+          caching:
+            enabled: true
+          cloneCodebase: true
+          execution:
+            steps:
+              - step:
+                  identifier: installdependencies
+                  name: install dependencies
+                  spec:
+                    command: npm install
+                  timeout: ""
+                  type: Run
+              - step:
+                  identifier: test
+                  name: test
+                  spec:
+                    command: npm run test
+                  timeout: ""
+                  type: Run
+              - step:
+                  identifier: build
+                  name: build
+                  spec:
+                    command: npm run build
+                  timeout: ""
+                  type: Run
+          platform:
+            arch: Amd64
+            os: Linux
+          runtime:
+            spec: {}
+            type: Cloud
+        type: CI
